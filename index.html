@@ -1,1 +1,400 @@
 
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clarity — PDF a Excel</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg1:#edf3ff;
+  --bg2:#f7f9fc;
+  --bg3:#f0f6f2;
+  --ink:#17181c;
+  --muted:#6f7480;
+  --blue:#2e79ff;
+  --blue-soft:rgba(46,121,255,.12);
+  --glass:rgba(255,255,255,.56);
+  --glass-strong:rgba(255,255,255,.74);
+  --soft:rgba(255,255,255,.44);
+  --shadow:0 24px 70px rgba(25,33,61,.10);
+  --shadow-soft:0 12px 30px rgba(28,35,59,.08);
+  --table-head:rgba(255,255,255,.62);
+  --line:rgba(255,255,255,.0);
+}
+:root.dark{
+  color-scheme:dark;
+  --bg1:#0f121a;
+  --bg2:#121722;
+  --bg3:#0d1716;
+  --ink:#f3f5f7;
+  --muted:#a1a8b4;
+  --blue:#5ea0ff;
+  --blue-soft:rgba(94,160,255,.16);
+  --glass:rgba(28,32,42,.50);
+  --glass-strong:rgba(31,36,48,.72);
+  --soft:rgba(255,255,255,.05);
+  --shadow:0 24px 70px rgba(0,0,0,.34);
+  --shadow-soft:0 12px 30px rgba(0,0,0,.24);
+  --table-head:rgba(255,255,255,.05);
+  --line:rgba(255,255,255,.0);
+}
+@media(prefers-color-scheme:dark){
+  :root:not(.light){
+    color-scheme:dark;
+    --bg1:#0f121a;
+    --bg2:#121722;
+    --bg3:#0d1716;
+    --ink:#f3f5f7;
+    --muted:#a1a8b4;
+    --blue:#5ea0ff;
+    --blue-soft:rgba(94,160,255,.16);
+    --glass:rgba(28,32,42,.50);
+    --glass-strong:rgba(31,36,48,.72);
+    --soft:rgba(255,255,255,.05);
+    --shadow:0 24px 70px rgba(0,0,0,.34);
+    --shadow-soft:0 12px 30px rgba(0,0,0,.24);
+    --table-head:rgba(255,255,255,.05);
+    --line:rgba(255,255,255,.0);
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(123,180,255,.28), transparent 26%),
+    radial-gradient(circle at 100% 0%, rgba(130,233,198,.22), transparent 25%),
+    linear-gradient(180deg,var(--bg1),var(--bg2) 45%,var(--bg3));
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+.hidden{display:none!important}
+.shell{max-width:1480px;margin:0 auto;padding:28px 24px 34px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+.brand{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:740;letter-spacing:-.6px}
+.brandicon{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(59,130,246,.98),rgba(16,185,129,.9));box-shadow:0 12px 24px rgba(40,111,255,.26);color:#fff;font-size:17px}
+.brand small{display:block;color:var(--muted);font-weight:510;font-size:12px;letter-spacing:.2px;margin-top:2px}
+.topright{display:flex;align-items:center;gap:10px}
+.pill,.themebutton{
+  border:0;
+  background:var(--glass);
+  color:var(--ink);
+  border-radius:999px;
+  padding:11px 14px;
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  box-shadow:var(--shadow-soft);
+  font-size:12px;
+}
+.hero{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:20px}
+.hero-copy{max-width:740px}
+.eyebrow{color:var(--blue);font-size:12px;font-weight:760;letter-spacing:1.4px;text-transform:uppercase}
+.hero h1{margin:8px 0 10px;font-size:clamp(32px,4.8vw,58px);line-height:1.02;letter-spacing:-2.8px}
+.hero p{margin:0;color:var(--muted);font-size:15px;line-height:1.65;max-width:660px}
+.workspace{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start}
+.panel{
+  background:var(--glass);
+  backdrop-filter:blur(24px) saturate(170%);
+  -webkit-backdrop-filter:blur(24px) saturate(170%);
+  border-radius:28px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.side-panel{padding:14px}
+.preview-panel{min-height:760px;display:flex;flex-direction:column}
+.minicard{background:var(--soft);border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18);padding:16px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 22px 16px}
+.panel-head h2{margin:0;font-size:17px;letter-spacing:-.45px}
+.stat{font-size:12px;color:var(--muted)}
+.side-section{margin-bottom:12px}
+.section-label{display:block;font-size:11px;font-weight:760;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;padding-left:4px}
+.drop{padding:16px;background:var(--glass-strong);border-radius:24px;outline:none;text-align:left;transition:.2s;box-shadow:var(--shadow-soft)}
+.drop.drag{transform:translateY(-1px);box-shadow:0 16px 34px rgba(46,121,255,.18)}
+.upload-icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:rgba(255,255,255,.56);color:var(--blue);box-shadow:0 10px 20px rgba(33,62,124,.08);margin-bottom:12px}
+.drop strong{display:block;font-size:15px;letter-spacing:-.2px}
+.drop p{margin:6px 0 14px;color:var(--muted);font-size:12px;line-height:1.55}
+.inline-file{margin-top:10px;font-size:12px;line-height:1.45;color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.btn{border:0;border-radius:16px;padding:12px 16px;font-size:13px;font-weight:690;transition:.18s;box-shadow:var(--shadow-soft)}
+.btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(.98)}
+.btn-primary{background:linear-gradient(180deg,rgba(65,139,255,1),rgba(39,108,255,1));color:#fff}
+.btn-secondary{background:rgba(255,255,255,.55);color:var(--ink)}
+.btn-green{background:linear-gradient(180deg,rgba(25,167,114,1),rgba(18,132,88,1));color:#fff}
+.btn-ghost{background:rgba(255,255,255,.28);color:var(--ink)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.actions-stack{display:flex;flex-direction:column;gap:10px}
+.select{width:100%;padding:12px 14px;background:var(--glass-strong);border:0;border-radius:16px;color:var(--ink);outline:none;box-shadow:var(--shadow-soft);appearance:none}
+.progress{height:8px;background:rgba(255,255,255,.35);border-radius:999px;overflow:hidden;margin-top:14px;box-shadow:inset 0 1px 1px rgba(255,255,255,.2)}
+.progress div{height:100%;width:0;background:linear-gradient(90deg,rgba(46,121,255,1),rgba(65,177,255,1));transition:width .2s}
+.status{font-size:12px;color:var(--muted);line-height:1.55;min-height:36px;margin-top:10px}
+.privacy{display:flex;gap:10px;font-size:12px;color:var(--muted);line-height:1.55}
+.privacy .dot{flex:0 0 auto;width:28px;height:28px;border-radius:12px;display:grid;place-items:center;background:rgba(33,179,111,.12);color:#1f8d62}
+.preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 22px 14px}
+.preview-toolbar strong{display:block;font-size:20px;letter-spacing:-.5px}
+.preview-toolbar .meta{font-size:12px;color:var(--muted);margin-top:4px}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+.empty-card{max-width:420px;padding:28px;background:rgba(255,255,255,.38);border-radius:28px;box-shadow:var(--shadow-soft)}
+.empty svg{color:rgba(111,116,128,.7)}
+.empty h3{margin:14px 0 8px;font-size:24px;letter-spacing:-.7px}
+.empty p{margin:0;color:var(--muted);font-size:14px;line-height:1.7}
+#results{display:flex;flex-direction:column;min-height:0;flex:1}
+.legend{font-size:12px;color:var(--muted);padding:12px 22px 0}
+.table-shell{padding:14px 18px 0;flex:1;min-height:0}
+.table-wrap{overflow:auto;max-height:calc(100vh - 330px);min-height:430px;background:rgba(255,255,255,.3);border-radius:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.grid{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;white-space:nowrap}
+.grid th{position:sticky;top:0;z-index:2;background:var(--table-head);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-size:10px;text-align:left;padding:14px 12px}
+.grid td{padding:6px 6px 0 6px;vertical-align:top}
+.grid td:first-child{width:58px;min-width:58px;text-align:center;color:var(--muted);font-size:11px;padding-top:12px}
+.grid td input{width:100%;background:rgba(255,255,255,.42);border:0;border-radius:14px;padding:10px 12px;color:var(--ink);outline:none;box-shadow:0 6px 18px rgba(31,41,55,.05)}
+.grid td input:focus{background:rgba(255,255,255,.72);box-shadow:0 0 0 2px rgba(46,121,255,.16),0 12px 24px rgba(46,121,255,.12)}
+.grid tr.section-row td input{font-weight:760;background:rgba(46,121,255,.12)}
+.grid tr.heading-row td input{font-weight:700;background:rgba(255,255,255,.62)}
+.grid tr.total-row td input{font-weight:700;background:rgba(25,167,114,.13)}
+.footerline{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 22px 20px}
+.footertext{font-size:12px;color:var(--muted)}
+.tips{margin:18px 0 0;color:var(--muted);font-size:12px;line-height:1.65;text-align:center}
+.modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(16,24,39,.34);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:18px}
+.modal{width:min(100%,440px);background:var(--glass-strong);backdrop-filter:blur(28px) saturate(170%);-webkit-backdrop-filter:blur(28px) saturate(170%);border-radius:28px;box-shadow:0 30px 90px rgba(0,0,0,.22);padding:28px;animation:appear .2s ease-out}
+.modal-mark{height:54px;width:54px;display:grid;place-items:center;background:rgba(255,255,255,.42);border-radius:18px;font-size:26px;margin-bottom:18px;box-shadow:var(--shadow-soft)}
+.modal h2{font-size:24px;letter-spacing:-.7px;margin:0 0 9px}
+.modal p{color:var(--muted);font-size:14px;line-height:1.55;margin:0 0 18px}
+.modal .label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px}
+.password-field{display:flex;gap:8px}
+.modal input{width:100%;min-width:0;border:0;background:rgba(255,255,255,.42);color:var(--ink);border-radius:16px;padding:13px 14px;outline:none;box-shadow:var(--shadow-soft)}
+.modal input:focus{box-shadow:0 0 0 2px rgba(46,121,255,.16), var(--shadow-soft)}
+.eye{border:0;color:var(--ink);border-radius:16px;background:rgba(255,255,255,.42);padding:0 14px;white-space:nowrap;box-shadow:var(--shadow-soft)}
+.modal-error{font-size:12px;color:#d84a4a;min-height:18px;margin-top:9px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:17px}
+.modal-actions button{flex:1}
+.modal-file{font-weight:600;overflow-wrap:anywhere;color:var(--ink)}
+body.modal-open{overflow:hidden}
+@keyframes appear{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media (max-width:1100px){
+  .workspace{grid-template-columns:1fr;}
+  .preview-panel{min-height:640px}
+  .table-wrap{max-height:58vh}
+}
+@media (max-width:700px){
+  .shell{padding:18px 14px 24px}
+  .top,.hero{display:block}
+  .topright{margin-top:12px}
+  .hero{margin-bottom:14px}
+  .hero h1{font-size:36px;letter-spacing:-1.6px}
+  .panel-head,.preview-toolbar,.footerline{padding-left:16px;padding-right:16px}
+  .table-shell{padding:12px 12px 0}
+  .table-wrap{min-height:320px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="brandicon">▦</div>
+      <div>Clarity<small>PDF a Excel · procesamiento local</small></div>
+    </div>
+    <div class="topright">
+      <button class="themebutton" id="theme" title="Cambiar tema">◐ Tema</button>
+      <div class="pill">OCR · tablas · fórmulas</div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">Conversión visual</div>
+      <h1>Sube tu archivo.<br>Revisa el Excel al instante.</h1>
+      <p>El archivo y sus opciones quedan en un panel lateral discreto. La vista previa del Excel ocupa el foco principal para revisar, corregir y descargar.</p>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <section class="panel side-panel">
+      <div class="side-section">
+        <span class="section-label">Documento</span>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Seleccionar documento">
+          <div class="upload-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M12 16V5"></path><path d="M7.5 9.5 12 5l4.5 4.5"></path><rect x="4" y="16" width="16" height="4" rx="2"></rect>
+            </svg>
+          </div>
+          <strong>Arrastra o selecciona tu PDF</strong>
+          <p>PDF, JPG, PNG o WEBP. Si el PDF tiene contraseña, la pediremos al abrirlo.</p>
+          <div class="actions"><button class="btn btn-primary" id="pick" type="button">Elegir archivo</button></div>
+          <div class="inline-file" id="filename">Ningún archivo seleccionado.</div>
+        </div>
+        <input id="file" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/*" class="hidden">
+      </div>
+
+      <div class="side-section minicard">
+        <span class="section-label">Configuración</span>
+        <div class="actions-stack">
+          <div>
+            <label class="section-label" for="lang" style="margin-bottom:8px;padding-left:0">Idioma OCR</label>
+            <select class="select" id="lang">
+              <option value="spa">Español</option>
+              <option value="eng">Inglés</option>
+              <option value="por">Portugués</option>
+            </select>
+          </div>
+          <div>
+            <label class="section-label" for="mode" style="margin-bottom:8px;padding-left:0">Interpretación</label>
+            <select class="select" id="mode">
+              <option value="layout">Reconstruir tablas y columnas</option>
+              <option value="lines">Una línea por fila</option>
+            </select>
+          </div>
+          <div>
+            <label class="section-label" for="formulas" style="margin-bottom:8px;padding-left:0">Fórmulas</label>
+            <select class="select" id="formulas">
+              <option value="detect">Detectar sumas automáticas</option>
+              <option value="off">No crear fórmulas</option>
+            </select>
+          </div>
+          <div>
+            <label class="section-label" for="limit" style="margin-bottom:8px;padding-left:0">Páginas</label>
+            <select class="select" id="limit">
+              <option value="all">Todas las páginas</option>
+              <option value="1">Solo primera página</option>
+              <option value="5">Primeras 5 páginas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-section minicard">
+        <div class="actions-stack">
+          <button class="btn btn-primary" id="process" disabled>Convertir a Excel</button>
+          <button class="btn btn-secondary" type="button" id="openFile">Cambiar archivo</button>
+        </div>
+        <div class="progress"><div id="bar"></div></div>
+        <div class="status" id="status" aria-live="polite">Selecciona un archivo para comenzar.</div>
+      </div>
+
+      <div class="side-section minicard">
+        <div class="privacy"><div class="dot">♧</div><div><strong>Privado por diseño.</strong> El documento se procesa dentro de tu navegador. No se envía a un servidor de extracción.</div></div>
+      </div>
+    </section>
+
+    <section class="panel preview-panel">
+      <div class="panel-head">
+        <h2>Vista previa del Excel</h2>
+        <span class="stat" id="count">0 filas · 0 columnas</span>
+      </div>
+      <div class="preview-toolbar">
+        <div>
+          <strong>Hoja editable</strong>
+          <div class="meta">Aquí revisas, corriges y exportas el resultado final.</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost" id="addrow">+ Fila</button>
+          <button class="btn btn-green" id="export">Descargar Excel</button>
+        </div>
+      </div>
+
+      <div id="empty" class="empty">
+        <div class="empty-card">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1">
+            <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+            <path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path>
+          </svg>
+          <h3>Todo listo para empezar.</h3>
+          <p>La hoja aparecerá aquí después de analizar el documento. Clarity intentará reconstruir títulos, columnas, tablas y totales.</p>
+        </div>
+      </div>
+
+      <div id="results" class="hidden">
+        <div class="legend" id="quality">Diseño reconstruido a partir de posiciones. Verifica columnas y totales.</div>
+        <div class="table-shell">
+          <div class="table-wrap">
+            <table class="grid">
+              <thead id="thead"></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="footerline">
+          <span class="footertext">Celdas editables · Los títulos pueden ocupar toda la fila · Revisa el resultado antes de descargar.</span>
+          <div class="actions">
+            <button class="btn btn-ghost" id="addrowFooter" type="button" onclick="document.getElementById('addrow').click()">+ Fila</button>
+            <button class="btn btn-green" id="exportFooter" type="button" onclick="document.getElementById('export').click()">Descargar Excel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <p class="tips">Nota: el OCR puede cometer errores, especialmente en fotos borrosas, tablas sin líneas o documentos complejos. Comprueba los datos importantes antes de utilizarlos.</p>
+</div>
+
+<div class="modal-backdrop hidden" id="passwordOverlay" aria-hidden="true">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="passwordTitle" aria-describedby="passwordDescription">
+    <div class="modal-mark" aria-hidden="true">🔒</div>
+    <h2 id="passwordTitle">PDF protegido</h2>
+    <p id="passwordDescription">Este documento necesita una contraseña para abrirse.<br><span class="modal-file" id="passwordFile"></span></p>
+    <form id="passwordForm">
+      <label class="label" for="pdfPassword">Contraseña del documento</label>
+      <div class="password-field">
+        <input id="pdfPassword" type="password" autocomplete="off" required placeholder="Escribe la contraseña">
+        <button type="button" class="eye" id="togglePassword" aria-label="Mostrar contraseña">Mostrar</button>
+      </div>
+      <div class="modal-error" id="passwordError" role="alert"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" id="cancelPassword">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Desbloquear PDF</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+$('openFile').onclick=()=>{$('file').click();};
+let file=null, rows=[], busy=false, passwordDialog=null, pageMetrics=[];
+const setStatus=s=>$('status').textContent=s;
+
+let sourceRows=[];
+const progress=v=>$('bar').style.width=Math.max(0,Math.min(100,v))+'%';
+function closePasswordDialog(){ $('passwordOverlay').classList.add('hidden');$('passwordOverlay').setAttribute('aria-hidden','true');document.body.classList.remove('modal-open');$('pdfPassword').value='';$('pdfPassword').type='password';$('togglePassword').textContent='Mostrar';passwordDialog?.previousFocus?.focus?.();passwordDialog=null; }
+function requirePdfPassword(reason){return new Promise((resolve,reject)=>{passwordDialog={resolve,reject,previousFocus:document.activeElement};$('passwordFile').textContent=file?.name||'';const wrong=reason===pdfjsLib.PasswordResponses.INCORRECT_PASSWORD;$('passwordError').textContent=wrong?'Contraseña incorrecta. Vuelve a intentarlo.':'';$('passwordTitle').textContent=wrong?'Contraseña incorrecta':'PDF protegido';$('passwordOverlay').classList.remove('hidden');$('passwordOverlay').setAttribute('aria-hidden','false');document.body.classList.add('modal-open');$('pdfPassword').focus();});}
+$('passwordForm').addEventListener('submit',e=>{e.preventDefault();if(!$('pdfPassword').value||!passwordDialog)return;const pending=passwordDialog,pass=$('pdfPassword').value;closePasswordDialog();pending.resolve(pass);});
+function cancelPdfPassword(){if(!passwordDialog)return;const pending=passwordDialog;closePasswordDialog();pending.reject(new Error('Se canceló la apertura del PDF protegido.'));}
+$('cancelPassword').onclick=cancelPdfPassword;
+$('togglePassword').onclick=()=>{const inp=$('pdfPassword');const show=inp.type==='password';inp.type=show?'text':'password';$('togglePassword').textContent=show?'Ocultar':'Mostrar';inp.focus();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&passwordDialog){e.preventDefault();cancelPdfPassword();}});
+function setFile(f){if(!f)return;const valid=f.type==='application/pdf'||f.type.startsWith('image/')||/\.(pdf|png|jpe?g|webp)$/i.test(f.name);if(!valid){setStatus('Formato incompatible. Usa PDF, JPG, PNG o WEBP.');return;}file=f;rows=[];sourceRows=[];pageMetrics=[];render();$('filename').textContent='✓ '+f.name+' · '+(f.size/1048576).toFixed(2)+' MB';$('process').disabled=false;progress(0);setStatus('Archivo listo para analizar.');$('process').focus();}
+$('pick').onclick=e=>{e.stopPropagation();$('file').click();};$('file').onchange=e=>setFile(e.target.files[0]);$('drop').onclick=e=>{if(e.target.id!=='pick')$('file').click();};$('drop').onkeydown=e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();$('file').click();}};
+for(const event of ['dragenter','dragover'])$('drop').addEventListener(event,e=>{e.preventDefault();$('drop').classList.add('drag');});for(const event of ['dragleave','drop'])$('drop').addEventListener(event,e=>{e.preventDefault();$('drop').classList.remove('drag');});$('drop').addEventListener('drop',e=>setFile(e.dataTransfer.files[0]));
+$('theme').onclick=()=>{const root=document.documentElement,dark=getComputedStyle(root).colorScheme==='dark';root.classList.toggle('light',dark);root.classList.toggle('dark',!dark);};
+function ocrTokens(tsv){const tokens=[];for(const line of (tsv||'').split(/\r?\n/).slice(1)){const p=line.split('\t');if(p.length<12||p[0]!=='5')continue;const text=p.slice(11).join('\t').trim(),x=+p[6],y=+p[7],w=+p[8],h=+p[9],confidence=+p[10];if(text&&[x,y,w,h].every(Number.isFinite)&&confidence>=0)tokens.push({text,x,y,w,h,size:h,confidence});}return tokens;}
+function nativeTokens(tc,view,page){const out=[];for(const item of tc.items||[]){if(!item.str?.trim())continue;const transform=pdfjsLib.Util.transform(view.transform,item.transform);const x=transform[4],baseline=transform[5],size=Math.max(7,Math.hypot(transform[2],transform[3]));const w=Math.max(1,item.width*view.scale),y=baseline-size;out.push({text:item.str.trim(),x,y,w,h:size,size,confidence:100});}return out;}
+function groupLines(tokens){const sorted=[...tokens].sort((a,b)=>(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x);const lines=[];for(const token of sorted){const cy=token.y+token.h/2;let line=lines.findLast(l=>Math.abs(l.cy-cy)<=Math.max(5,Math.min(l.h,token.h)*.42));if(!line){line={cy,h:token.h,tokens:[]};lines.push(line);}line.tokens.push(token);line.cy=(line.cy*(line.tokens.length-1)+cy)/line.tokens.length;line.h=Math.max(line.h,token.h);}return lines.sort((a,b)=>a.cy-b.cy).map(line=>({...line,tokens:line.tokens.sort((a,b)=>a.x-b.x)}));}
+function segments(line){const t=line.tokens;const median=t.map(a=>a.h).sort((a,b)=>a-b)[Math.floor(t.length/2)]||14;const parts=[];let current=[];for(const item of t){const prev=current.at(-1),gap=prev?item.x-(prev.x+prev.w):0;if(prev&&gap>Math.max(20,median*1.7)){parts.push(current);current=[];}current.push(item);}if(current.length)parts.push(current);return parts.map(group=>({text:group.map(x=>x.text).join(' ').replace(/\s+/g,' ').trim(),x:group[0].x,end:Math.max(...group.map(t=>t.x+t.w)),size:Math.max(...group.map(t=>t.size))}));}
+function isNumeric(v){return /^\s*\(?[-+]?\s*(?:\$|COP|USD|€)?\s*\d[\d.,\s]*\)?\s*%?\s*$/.test(String(v||''));}
+function parseAmount(v){let a=String(v).trim().replace(/(?:COP|USD|EUR|\$|€|%)/gi,'').replace(/\s/g,'');if(!/^\(?[-+]?\d[\d.,]*\)?$/.test(a))return NaN;const neg=a.startsWith('(');a=a.replace(/[()]/g,'');const dec=a.lastIndexOf(','),dot=a.lastIndexOf('.');if(dec>=0&&dot>=0){const delimiter=dec>dot?',':'.';a=a.replace(new RegExp('\\'+(delimiter===','?'.':',') ,'g'),'').replace(delimiter,'.');}else if(dec>=0||dot>=0){const delimiter=dec>=0?',':'.',idx=a.lastIndexOf(delimiter),digits=a.length-idx-1;if(digits===3&&idx>0)a=a.replace(new RegExp('\\'+delimiter,'g'),'');else if(delimiter===',')a=a.replace(',','.');}return (neg?-1:1)*Number(a);}
+function classify(line,parts,medianSize,width){const full=parts.map(p=>p.text).join(' '),center=parts.length===1&&Math.abs((parts[0].x+parts[0].end)/2-width/2)<width*.19;const upper=full.length>3&&full===full.toLocaleUpperCase('es')&&/[A-ZÁÉÍÓÚÑ]/.test(full);if(/\b(total|subtotal|suma|neto|saldo total)\b/i.test(full)&&parts.some(p=>isNumeric(p.text)))return 'total';if(parts.length===1&&((parts[0].size>medianSize*1.22)||(upper&&center&&full.length<90)))return 'title';if(parts.length>=2&&parts.every(p=>!isNumeric(p.text))&&upper)return 'header';return 'body';}
+function detectAnchors(lines,width){const hist=[];for(const line of lines){if(line.parts.length<2||line.role==='title')continue;for(let i=1;i<line.parts.length;i++){const left=line.parts[i-1],right=line.parts[i],gap=right.x-left.end;if(gap>=Math.max(16,width*.022))hist.push({x:(right.x+left.end)/2,row:line.id});}}let clusters=[];for(const candidate of hist.sort((a,b)=>a.x-b.x)){let c=clusters.find(c=>Math.abs(c.x-candidate.x)<Math.max(15,width*.025));if(!c){c={x:candidate.x,rows:new Set()};clusters.push(c);}c.x=(c.x*c.rows.size+candidate.x)/(c.rows.size+1);c.rows.add(candidate.row);}const required=lines.length<5?1:Math.max(2,Math.ceil(lines.filter(l=>l.parts.length>1).length*.23));return clusters.filter(c=>c.rows.size>=required).sort((a,b)=>a.x-b.x).slice(0,11).map(c=>c.x).sort((a,b)=>a-b);}
+function pageRows(tokens,width,pageNumber){const raw=groupLines(tokens).filter(l=>l.tokens.length);if(!raw.length)return [];const medianSize=raw.flatMap(l=>l.tokens.map(t=>t.size)).sort((a,b)=>a-b)[Math.floor(raw.flatMap(l=>l.tokens).length/2)]||15;const lines=raw.map((line,id)=>{const parts=segments(line);return {...line,id,parts,role:classify(line,parts,medianSize,width)};});if($('mode').value==='lines')return lines.map(l=>({cells:[l.parts.map(p=>p.text).join(' ')],role:l.role==='title'?'title':'body',page:pageNumber}));const anchors=detectAnchors(lines,width);const n=Math.max(1,anchors.length+1);return lines.map(l=>{let cells=Array(n).fill('');if(l.role==='title'||(l.parts.length===1&&!isNumeric(l.parts[0]?.text)&&l.parts[0]?.end-l.parts[0]?.x>width*.56)){return {cells:[l.parts.map(p=>p.text).join(' ')],role:'title',page:pageNumber,merge:n};}for(const part of l.parts){const idx=anchors.filter(a=>part.x>a).length;cells[idx]=(cells[idx]?cells[idx]+' ':'')+part.text;}return {cells,role:l.role,page:pageNumber,merge:1};});}
+function maxCols(){return Math.max(1,...rows.map(r=>r.cells.length),...pageMetrics.map(p=>p.columns||1));}
+function render(){const cols=maxCols();$('count').textContent=rows.length+' filas · '+cols+' columnas';$('thead').replaceChildren();$('tbody').replaceChildren();const h=document.createElement('tr');for(let c=-1;c<cols;c++){const th=document.createElement('th');th.textContent=c<0?'#':String.fromCharCode(65+c);h.append(th);}$('thead').append(h);rows.forEach((r,i)=>{const tr=document.createElement('tr');tr.className=r.role==='title'?'section-row':r.role==='header'?'heading-row':r.role==='total'?'total-row':'';const no=document.createElement('td');no.textContent=i+1;tr.append(no);const merged=r.role==='title';for(let c=0;c<(merged?1:cols);c++){const td=document.createElement('td');if(merged)td.colSpan=cols;const input=document.createElement('input');input.value=r.cells[c]||'';input.setAttribute('aria-label',`Fila ${i+1} columna ${c+1}`);input.addEventListener('input',()=>{r.cells[c]=input.value;});td.append(input);tr.append(td);} $('tbody').append(tr);});$('empty').classList.toggle('hidden',rows.length>0);$('results').classList.toggle('hidden',rows.length===0);$('quality').textContent='Vista estructural aproximada · '+pageMetrics.length+' página(s) · títulos y totales resaltados. Comprueba las columnas y las fórmulas.';}
+async function process(){if(!file||busy)return;const pdf=/\.pdf$/i.test(file.name)||file.type==='application/pdf';if(typeof XLSX==='undefined'||typeof Tesseract==='undefined'||(pdf&&typeof pdfjsLib==='undefined')){setStatus('Faltan bibliotecas. Comprueba la conexión a internet y recarga.');return;}busy=true;$('process').disabled=true;rows=[];sourceRows=[];pageMetrics=[];render();progress(0);let worker=null,doc=null;try{let pages=[];if(pdf){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';const task=pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())});let cancelled=false;task.onPassword=(update,reason)=>{requirePdfPassword(reason).then(password=>update(password)).catch(()=>{cancelled=true;task.destroy().catch(()=>{});});};try{doc=await task.promise;}catch(e){if(cancelled)throw new Error('Se canceló la contraseña.');throw e;}const lim=$('limit').value,n=lim==='all'?doc.numPages:Math.min(doc.numPages,Number(lim));for(let i=1;i<=n;i++)pages.push({page:await doc.getPage(i),number:i});}else pages=[{image:file,number:1}];
+for(let pi=0;pi<pages.length;pi++){const entry=pages[pi];setStatus(`Analizando página ${pi+1} de ${pages.length}…`);let tokens=[],width=1000;if(entry.page){const page=entry.page,viewport=page.getViewport({scale:2});width=viewport.width;const native=await page.getTextContent({normalizeWhitespace:true});tokens=nativeTokens(native,viewport,page);if(tokens.length<8){const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;if(!worker)worker=await Tesseract.createWorker($('lang').value);const result=await worker.recognize(canvas,{}, {tsv:true,text:true});tokens=ocrTokens(result.data.tsv);}}else{const bitmap=await createImageBitmap(entry.image),canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;width=canvas.width;canvas.getContext('2d').drawImage(bitmap,0,0);bitmap.close();if(!worker)worker=await Tesseract.createWorker($('lang').value);const result=await worker.recognize(canvas,{}, {tsv:true,text:true});tokens=ocrTokens(result.data.tsv);}
+const chunk=pageRows(tokens,width,entry.number);pageMetrics.push({page:entry.number,columns:Math.max(1,...chunk.map(r=>r.cells.length))});sourceRows.push(...chunk);rows=sourceRows.map(r=>({...r,cells:[...r.cells]}));progress((pi+1)/pages.length*100);render();}setStatus(rows.length?'Datos reconstruidos. Revisa las columnas y totales antes de descargar.':'No se detectó texto legible.');if(rows.length)$('results').scrollIntoView({behavior:'smooth',block:'start'});}catch(error){console.error(error);setStatus('No se pudo procesar: '+(error.message||String(error)));}finally{if(worker)await worker.terminate().catch(()=>{});if(doc)await doc.destroy().catch(()=>{});busy=false;$('process').disabled=!file;}}
+function formulaCandidates(){if($('formulas').value==='off')return new Map();const candidates=new Map(),cols=maxCols();for(let i=0;i<rows.length;i++){const r=rows[i];if(r.role!=='total')continue;for(let c=0;c<Math.min(cols,r.cells.length);c++){const stated=parseAmount(r.cells[c]);if(!Number.isFinite(stated)||!isNumeric(r.cells[c]))continue;let values=[],indices=[];for(let k=i-1;k>=0;k--){const prev=rows[k];if(prev.page!==r.page||prev.role==='title'||prev.role==='header'||prev.role==='total')break;const v=parseAmount(prev.cells[c]);if(!Number.isFinite(v)||!isNumeric(prev.cells[c]))break;values.unshift(v);indices.unshift(k);}if(values.length<2)continue;const sum=values.reduce((a,b)=>a+b,0);if(Math.abs(sum-stated)<=Math.max(.011,Math.abs(stated)*.00001)){const letter=XLSX.utils.encode_col(c);candidates.set(`${i}:${c}`,`${letter}${indices[0]+1}:${letter}${indices.at(-1)+1}`);}}}return candidates;}
+function styleSheetJS(sheet){sheet['!cols']=Array.from({length:maxCols()},(_,c)=>({wch:Math.min(48,Math.max(14,...rows.map(r=>(r.cells[c]||'').length+2)))}));sheet['!merges']=rows.map((r,i)=>r.role==='title'&&maxCols()>1?{s:{r:i,c:0},e:{r:i,c:maxCols()-1}}:null).filter(Boolean);}
+async function exportExcel(){if(!rows.length)return;const formulas=formulaCandidates(),name=(file?.name.replace(/\.[^.]+$/,'')||'documento')+'_reconstruido.xlsx';if(typeof ExcelJS==='undefined'){const aoa=rows.map(r=>r.cells.map(x=>x??''));const sheet=XLSX.utils.aoa_to_sheet(aoa);styleSheetJS(sheet);for(const [key,ref] of formulas){const [i,c]=key.split(':').map(Number),address=XLSX.utils.encode_cell({r:i,c});sheet[address]={t:'n',f:`SUM(${ref})`};}const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,sheet,'Documento');XLSX.writeFile(book,name);return;}
+const wb=new ExcelJS.Workbook();const sh=wb.addWorksheet('Documento',{views:[{state:'frozen',ySplit:0}]});sh.properties.defaultRowHeight=21;const cols=maxCols();sh.columns=Array.from({length:cols},(_,c)=>({width:Math.min(55,Math.max(15,...rows.map(r=>String(r.cells[c]||'').length+3)))}));for(let i=0;i<rows.length;i++){const r=rows[i],excelRow=sh.getRow(i+1);excelRow.height=r.role==='title'?30:23;for(let c=0;c<cols;c++){if(r.role==='title'&&c>0)continue;const cell=excelRow.getCell(c+1),val=r.cells[c]||'';const formula=formulas.get(`${i}:${c}`);const num=parseAmount(val);cell.value=formula?{formula:`SUM(${formula})`,result:num}:isNumeric(val)&&Number.isFinite(num)?num:val;cell.alignment={vertical:'middle',wrapText:true,horizontal:typeof cell.value==='number'?'right':'left'};cell.font={name:'Aptos',size:r.role==='title'?15:11,bold:['title','header','total'].includes(r.role),color:{argb:'FF1D1D1F'}};if(r.role==='title')cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEAF2FF'}};else if(r.role==='header')cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF1F3F7'}};else if(r.role==='total')cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE6F6EE'}};if(typeof cell.value==='number'||formula)cell.numFmt='#,##0.00';if(r.role!=='title')cell.border={bottom:{style:'hair',color:{argb:'FFE5E7EB'}}};}if(r.role==='title'&&cols>1)sh.mergeCells(i+1,1,i+1,cols);}const buffer=await wb.xlsx.writeBuffer();const url=URL.createObjectURL(new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);}
+$('process').onclick=process;$('addrow').onclick=()=>{rows.push({cells:Array(maxCols()).fill(''),role:'body',page:rows.at(-1)?.page||1});render();$('tbody').lastElementChild?.querySelector('input')?.focus();};$('export').onclick=()=>exportExcel().catch(e=>{console.error(e);setStatus('Error exportando Excel: '+e.message);});
+})();
+</script>
+</body>
+</html>
